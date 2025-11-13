@@ -1,0 +1,12 @@
+
+from sklearn.ensemble import RandomForestClassifier
+import numpy as np
+
+# Example: Training model, 'features' is precomputed process event data.
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
+
+# For each new process observation:
+prob = model.predict_proba(X_live)[0][1]
+if prob > 0.8:
+    print("ALERT: Potential keylogger detected with confidence:", prob)
