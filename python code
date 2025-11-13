@@ -1,0 +1,31 @@
+import psutil
+import time
+import pandas as pd
+
+WHITELIST = {"explorer.exe", "chrome.exe", "python.exe"}
+
+def collect_process_data():
+    data = []
+    for proc in psutil.process_iter(['pid', 'name', 'username', 'cpu_times', 'num_handles']):
+        try:
+            info = proc.info
+            data.append([info['pid'], info['name'], info['username'], info['cpu_times'].user, info['num_handles']])
+        except (psutil.AccessDenied, psutil.NoSuchProcess):
+            continue
+    return pd.DataFrame(data, columns=['pid', 'name', 'username', 'cpu_user_time', 'num_handles'])
+
+def flag_suspicious(df):
+    suspicious = df.loc[(~df['name'].isin(WHITELIST)) & (df['num_handles'] > 50)]
+    return suspicious
+
+def main():
+    print("Starting keylogger detection (demo)")
+    while True:
+        df = collect_process_data()
+        flagged = flag_suspicious(df)
+        if not flagged.empty:
+            print("ALERT:", flagged)
+        time.sleep(10)
+
+if __name__ == "__main__":
+    main()
